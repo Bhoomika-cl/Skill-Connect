@@ -1,0 +1,28 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Award, ExternalLink, FileText, RefreshCw, Search } from "lucide-react";
+import API from "../services/api.js";
+
+const filters = [["all","All"],["submitted","Pending review"],["verified","Verified"],["rejected","Rejected"]];
+
+const getCertificationId = (cert) => cert?.id ?? cert?._id ?? "";
+
+export default function AdminCertificationWorkspace() {
+  const [params] = useSearchParams();
+  const [items,setItems]=useState([]); const [query,setQuery]=useState(""); const [status,setStatus]=useState("all"); const [busyId,setBusyId]=useState(""); const [error,setError]=useState(""); const [message,setMessage]=useState("");
+  const load=useCallback(async()=>{try{const {data}=await API.get("/api/admin/certifications");setItems(data.certifications||[]);setError("");}catch(e){setError(e.response?.data?.detail||"Could not load certification records.");}},[]);
+  useEffect(()=>{queueMicrotask(()=>{void load();});},[load]);
+  useEffect(()=>{const id=params.get("cert");if(id){const el=document.getElementById(`cert-${id}`);el?.scrollIntoView({behavior:"smooth",block:"center"});}},[params,items]);
+  const review=async(cert,nextStatus)=>{const id=getCertificationId(cert);if(!id){setError("Certification ID is missing.");return;}setBusyId(id);setError("");setMessage("");try{await API.patch(`/api/admin/certifications/${id}/review`,{verification_status:nextStatus});setMessage(`Certification marked ${nextStatus}.`);await load();}catch(e){setError(e.response?.data?.detail||"Could not save the review.");}finally{setBusyId("");}};
+  const openProof=async(cert)=>{const id=getCertificationId(cert);if(!id){setError("Certification ID is missing.");return;}setBusyId(id);setError("");try{const response=await API.get(`/api/certifications/${id}/proof`,{responseType:"blob"});const url=URL.createObjectURL(response.data);const opened=window.open(url,"_blank","noopener,noreferrer");if(!opened)URL.revokeObjectURL(url);}catch(e){setError(e.response?.data?.detail||"Could not open the private proof file.");}finally{setBusyId("");}};
+  const filtered=useMemo(()=>items.filter((item)=>{const text=[item.name,item.employee_name,item.employee_email,item.issuer,item.credential_id,item.notes].join(" ").toLowerCase();return(!query.trim()||text.includes(query.trim().toLowerCase()))&&(status==="all"||item.verification_status===status);}),[items,query,status]);
+  const count=(key)=>items.filter((item)=>key==="all"||item.verification_status===key).length;
+  return <div className="admin-page">
+    <div className="admin-page-head"><div><span className="admin-eyebrow">Certifications</span><h1>Certification reviews</h1><p>Search employee-submitted credentials, inspect private proof, and record a review decision.</p></div><button className="admin-button" onClick={load}><RefreshCw size={14}/>Refresh</button></div>
+    {error&&<div className="admin-alert" role="alert">{error}</div>}{message&&<div className="admin-success" role="status">{message}</div>}
+    <section className="admin-panel"><div className="admin-toolbar" style={{marginBottom:12}}><div className="admin-search"><Search size={14}/><input className="admin-input" placeholder="Search certification, employee, issuer…" aria-label="Search certifications" value={query} onChange={(e)=>setQuery(e.target.value)}/></div><span className="admin-pill">{filtered.length} records</span></div>
+      <div className="admin-tabs" role="tablist" aria-label="Certification status">{filters.map(([key,label])=><button className={`admin-tab${status===key?" active":""}`} key={key} role="tab" aria-selected={status===key} onClick={()=>setStatus(key)}>{label}<span>{count(key)}</span></button>)}</div>
+      {filtered.length? <div className="admin-grid" style={{paddingTop:14}}>{filtered.map((cert)=><article id={`cert-${getCertificationId(cert)}`} key={getCertificationId(cert)} className="admin-result-card"><div className="admin-result-top"><span className="admin-result-icon"><Award size={15}/></span><div className="admin-result-title"><h3>{cert.name}</h3><p>{cert.employee_name||"Employee"}{cert.employee_email?` · ${cert.employee_email}`:""}</p></div><span className={`admin-pill ${cert.verification_status==="verified"?"success":cert.verification_status==="rejected"?"danger":"warning"}`}>{cert.verification_status}</span></div><p>{cert.issuer||"Issuer not listed"}{cert.issue_date?` · Issued ${cert.issue_date}`:""}{cert.expiration_date?` · Expires ${cert.expiration_date}`:""}</p>{cert.credential_id&&<p>Credential ID: {cert.credential_id}</p>}{cert.notes&&<p>{cert.notes}</p>}<div className="admin-result-actions">{cert.verification_url&&<a className="admin-button" href={cert.verification_url} target="_blank" rel="noopener noreferrer"><ExternalLink size={13}/>Verification link</a>}{cert.proof&&<button className="admin-button" disabled={busyId===getCertificationId(cert)} onClick={()=>openProof(cert)}><FileText size={13}/>Open private proof</button>}{cert.verification_status!=="verified"&&<button className="admin-button" disabled={busyId===getCertificationId(cert)} onClick={()=>review(cert,"verified")}>Mark verified</button>}{cert.verification_status!=="rejected"&&<button className="admin-button danger" disabled={busyId===getCertificationId(cert)} onClick={()=>review(cert,"rejected")}>Mark rejected</button>}{cert.verification_status!=="submitted"&&<button className="admin-button" disabled={busyId===getCertificationId(cert)} onClick={()=>review(cert,"submitted")}>Return to pending</button>}</div></article>)}</div>:<div className="admin-empty">No certifications match these filters.</div>}
+    </section>
+  </div>;
+}

@@ -7,7 +7,9 @@ import {
   BarChart3,
   Settings,
   UserCircle,
-  X
+  X,
+  CheckSquare,
+  Award
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -16,9 +18,19 @@ function Sidebar({ isOpen, onClose }) {
   const navigationItems = [
     {
       name: "Dashboard",
-      path: "/dashboard",
+        path: "/employee/dashboard",
       icon: LayoutDashboard
     },
+      {
+        name: "My Tasks",
+        path: "/employee/my-tasks",
+        icon: CheckSquare
+      },
+      {
+        name: "Certifications",
+        path: "/employee/certifications",
+        icon: Award
+      },
     {
       name: "Find People",
       path: "/find-people",

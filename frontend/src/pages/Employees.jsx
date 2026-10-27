@@ -15,6 +15,7 @@ import {
   Settings,
   UserRound,
   Users,
+  ShieldCheck,
   X,
 } from "lucide-react";
 
@@ -1359,6 +1360,13 @@ function Employees() {
                 <Award size={18} />
                 Skill Insights
               </Link>
+
+              {user?.role === "admin" && (
+                <Link to="/admin" className="employees-nav-item">
+                  <ShieldCheck size={18} />
+                  Admin Console
+                </Link>
+              )}
 
             </nav>
 

@@ -2,3 +2,6 @@ fastapi
 uvicorn
 pymongo
 python-dotenv
+bcrypt
+python-multipart
+msal

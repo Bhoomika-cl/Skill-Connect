@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Eye,
@@ -8,14 +8,20 @@ import {
   UserRound,
   CheckCircle2,
   LoaderCircle,
+  ShieldCheck,
+  UsersRound,
+  Search,
+  ClipboardCheck,
 } from "lucide-react";
 
 import API from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
-function Login() {
+function Login({ role = "employee" }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const [providers, setProviders] = useState({ microsoft_enabled: false, password_login_enabled: true });
 
   const [formData, setFormData] = useState({
     username: "",
@@ -27,6 +33,13 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    API.get("/api/auth/providers").then(({ data }) => setProviders(data)).catch(() => {});
+    const authError = new URLSearchParams(location.search).get("authError");
+    if (authError === "organization_access_required") setError("Your Microsoft account is not in the approved CirrusLabs access group.");
+    else if (authError) setError("Microsoft sign in did not complete. Please try again or contact your administrator.");
+  }, [location.search]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -61,10 +74,12 @@ function Login() {
 
     try {
       setLoading(true);
+      localStorage.removeItem("authToken");
 
       const response = await API.post("/api/auth/login", {
         username,
         password,
+        role,
       });
 
       const responseData = response.data || {};
@@ -85,7 +100,7 @@ function Login() {
       setSuccess("Login successful. Redirecting...");
 
       setTimeout(() => {
-        navigate("/dashboard", {
+        navigate(role === "admin" ? "/admin/dashboard" : "/employee/dashboard", {
           replace: true,
         });
       }, 500);
@@ -234,6 +249,140 @@ function Login() {
 
     .login-welcome {
       margin-bottom: 42px;
+    }
+
+    .login-page-admin .login-left {
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    }
+
+    .login-admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border: 1px solid #dbe7ff;
+      border-radius: 999px;
+      background: #f1f6ff;
+      color: #245ce5;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .login-admin-access-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin: -20px 0 25px;
+      padding: 14px 15px;
+      border: 1px solid #dfe8f7;
+      border-radius: 12px;
+      background: #f7faff;
+      color: #52627a;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .login-admin-access-note svg {
+      flex: 0 0 auto;
+      color: #2563eb;
+    }
+
+    .login-admin-access-note strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #172033;
+      font-size: 13px;
+    }
+
+    .login-role-switch {
+      display: inline-flex;
+      gap: 4px;
+      margin-top: 22px;
+      padding: 4px;
+      border: 1px solid #e3eaf5;
+      border-radius: 11px;
+      background: #f7f9fc;
+    }
+
+    .login-role-switch a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      color: #66748b;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+
+    .login-role-switch a:hover {
+      color: #245ce5;
+      background: #edf3ff;
+    }
+
+    .login-role-switch a.active {
+      color: #245ce5;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(24, 45, 80, .12);
+    }
+
+    .login-admin-benefits {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 12px;
+      width: min(560px, 84%);
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, .85);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .82);
+      box-shadow: 0 18px 45px rgba(37, 77, 145, .12);
+      backdrop-filter: blur(12px);
+    }
+
+    .login-admin-benefit {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .login-admin-benefit-icon {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 11px;
+      background: #edf3ff;
+      color: #2563eb;
+    }
+
+    .login-admin-benefit strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #172033;
+      font-size: 13px;
+    }
+
+    .login-page-admin .login-right {
+      background: linear-gradient(145deg, #eaf2ff 0%, #f4f7ff 52%, #e8edff 100%);
+    }
+
+    .login-page-admin .login-visual-heading h2 span {
+      color: #7048df;
+    }
+
+    .login-page-admin .login-signup {
+      margin-top: 20px;
     }
 
     /*
@@ -1308,7 +1457,7 @@ function Login() {
     <>
       <style>{styles}</style>
 
-      <div className="login-page">
+      <div className={`login-page ${role === "admin" ? "login-page-admin" : ""}`}>
 
         {/* ==========================================
             LEFT SIDE
@@ -1338,18 +1487,43 @@ function Login() {
 
             <div className="login-welcome">
 
+              {role === "admin" && (
+                <div className="login-admin-badge">
+                  <ShieldCheck size={15} />
+                  Organization administrator
+                </div>
+              )}
+
               <h1>
-                Welcome Back!
+                {role === "admin" ? "Admin sign in" : "Employee sign in"}
               </h1>
 
               <p>
-                Sign in to your account to
-                continue discovering skills,
-                people and expertise across
-                your organization.
+                {role === "admin"
+                  ? "Manage employee access, review skills and certifications, and keep your organization’s talent directory up to date."
+                  : "Sign in to view your profile, skills, projects and assigned work."}
               </p>
 
+              <nav className="login-role-switch" aria-label="Choose sign-in type">
+                <Link className={role === "employee" ? "active" : ""} to="/employee/login" aria-current={role === "employee" ? "page" : undefined}>
+                  Employee sign in
+                </Link>
+                <Link className={role === "admin" ? "active" : ""} to="/admin/login" aria-current={role === "admin" ? "page" : undefined}>
+                  Admin sign in
+                </Link>
+              </nav>
+
             </div>
+
+            {role === "admin" && (
+              <div className="login-admin-access-note">
+                <ShieldCheck size={19} />
+                <span>
+                  <strong>Protected Admin workspace</strong>
+                  Admin access is assigned by an authorized administrator. Employee accounts must use employee sign-in.
+                </span>
+              </div>
+            )}
 
             <form
               className="login-form"
@@ -1515,10 +1689,10 @@ function Login() {
               <button
                 type="submit"
                 className="login-submit"
-                disabled={loading}
+                disabled={loading || !providers.password_login_enabled}
               >
 
-                {loading ? (
+                  {loading ? (
                   <>
                     <LoaderCircle
                       size={18}
@@ -1529,7 +1703,7 @@ function Login() {
                   </>
                 ) : (
                   <>
-                    Sign In
+                    {providers.password_login_enabled ? "Sign In" : "Use Microsoft sign-in"}
 
                     <ArrowRight
                       size={19}
@@ -1558,11 +1732,8 @@ function Login() {
               <button
                 type="button"
                 className="login-sso"
-                onClick={() =>
-                  setError(
-                    "Company SSO is not connected yet."
-                  )
-                }
+                disabled={!providers.microsoft_enabled}
+                onClick={() => { window.location.href = `${API.defaults.baseURL}/api/auth/microsoft/login`; }}
               >
 
                 <div className="login-microsoft-icon">
@@ -1574,7 +1745,7 @@ function Login() {
 
                 </div>
 
-                Sign in with Company SSO
+                {providers.microsoft_enabled ? "Sign in with Microsoft" : "Microsoft sign-in requires CirrusLabs IT setup"}
 
               </button>
 
@@ -1583,12 +1754,11 @@ function Login() {
             {/* SIGN UP */}
 
             <div className="login-signup">
-
-              Don't have an account?{" "}
-
-              <Link to="/signup">
-                Create an account
-              </Link>
+              {role === "admin" ? (
+                <>Need Admin access? Contact your SkillConnect administrator.</>
+              ) : (
+                <>Don&apos;t have an account?{" "}<Link to="/signup">Create an account</Link></>
+              )}
 
             </div>
 
@@ -1607,19 +1777,37 @@ function Login() {
             <div className="login-visual-heading">
 
               <h2>
-                People with the right{" "}
-                <span>skills</span>{" "}
-                can do amazing things together.
+                {role === "admin" ? (
+                  <>Turn your organization’s expertise into a <span>team advantage.</span></>
+                ) : (
+                  <>People with the right <span>skills</span> can do amazing things together.</>
+                )}
               </h2>
 
               <p>
-                Discover the expertise already
-                available across your organization
-                and connect with the people who can
-                help your team grow.
+                {role === "admin"
+                  ? "Find people by skill, track projects and tasks, and review employee certifications from one workspace."
+                  : "Discover the expertise already available across your organization and connect with the people who can help your team grow."}
               </p>
 
             </div>
+
+            {role === "admin" && (
+              <div className="login-admin-benefits">
+                <div className="login-admin-benefit">
+                  <span className="login-admin-benefit-icon"><UsersRound size={18} /></span>
+                  <span><strong>Employee directory</strong>Review profiles and manage account access</span>
+                </div>
+                <div className="login-admin-benefit">
+                  <span className="login-admin-benefit-icon"><Search size={18} /></span>
+                  <span><strong>Skill matching</strong>Find expertise and identify skill gaps</span>
+                </div>
+                <div className="login-admin-benefit">
+                  <span className="login-admin-benefit-icon"><ClipboardCheck size={18} /></span>
+                  <span><strong>Team oversight</strong>Track tasks, projects, and certification reviews</span>
+                </div>
+              </div>
+            )}
 
             <div className="login-illustration">
 

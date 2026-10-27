@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Code2,
   FolderKanban,
+  Pencil,
 } from "lucide-react";
 
 import API from "../services/api.js";
@@ -45,6 +46,7 @@ function Profile() {
 
   const [deletingSkillId, setDeletingSkillId] =
     useState(null);
+  const [editingSkillId, setEditingSkillId] = useState("");
 
   const [deletingProjectId, setDeletingProjectId] =
     useState(null);
@@ -60,11 +62,14 @@ function Profile() {
     department: "",
     job_title: "",
     bio: "",
+    teams_link: "",
   });
 
   const [skillForm, setSkillForm] = useState({
     skill_name: "",
     proficiency: "",
+    category: "",
+    years_experience: "",
   });
 
   const [projectForm, setProjectForm] = useState({
@@ -129,6 +134,8 @@ function Profile() {
 
         bio:
           profileData.bio || "",
+        teams_link:
+          profileData.teams_link || "",
       });
 
       /*
@@ -311,6 +318,9 @@ function Profile() {
             bio:
               profileForm.bio,
 
+            teams_link:
+              profileForm.teams_link,
+
             skills:
               skills,
 
@@ -441,19 +451,16 @@ function Profile() {
     try {
       setAddingSkill(true);
 
-      const response =
-        await API.post(
-          "/api/skills",
-          {
-            user_id: userId,
-
-            skill_name:
-              skillName,
-
-            proficiency:
-              proficiency,
-          }
-        );
+      const skillPayload = {
+        user_id: userId,
+        skill_name: skillName,
+        proficiency,
+        category: skillForm.category,
+        years_experience: skillForm.years_experience ? Number(skillForm.years_experience) : null,
+      };
+      const response = editingSkillId
+        ? await API.patch(`/api/skills/${editingSkillId}`, skillPayload)
+        : await API.post("/api/skills", skillPayload);
 
       console.log(
         "Add skill response:",
@@ -463,10 +470,13 @@ function Profile() {
       setSkillForm({
         skill_name: "",
         proficiency: "",
+        category: "",
+        years_experience: "",
       });
+      setEditingSkillId("");
 
       setMessage(
-        "Skill added successfully."
+        editingSkillId ? "Skill updated successfully." : "Skill added successfully."
       );
 
       /*
@@ -1437,6 +1447,18 @@ function Profile() {
 
               </div>
 
+              <div className="profile-field full">
+                <label>Microsoft Teams Contact Link</label>
+                <input
+                  type="url"
+                  name="teams_link"
+                  value={profileForm.teams_link}
+                  onChange={handleProfileChange}
+                  placeholder="https://teams.microsoft.com/..."
+                />
+                <small>Save a trusted HTTPS Teams link so an authorized administrator can contact you. Paste a link provided by your organization.</small>
+              </div>
+
             </div>
 
             <div className="profile-save-row">
@@ -1513,7 +1535,7 @@ function Profile() {
             >
 
               <h3>
-                Add a New Skill
+                  {editingSkillId ? "Edit Skill" : "Add a New Skill"}
               </h3>
 
               <div className="add-form-fields">
@@ -1562,6 +1584,25 @@ function Profile() {
 
                 </select>
 
+                <input
+                  type="text"
+                  name="category"
+                  value={skillForm.category}
+                  onChange={handleSkillChange}
+                  placeholder="Category (e.g. Backend)"
+                />
+
+                <input
+                  type="number"
+                  name="years_experience"
+                  min="0"
+                  max="80"
+                  step="0.5"
+                  value={skillForm.years_experience}
+                  onChange={handleSkillChange}
+                  placeholder="Years of experience"
+                />
+
                 <button
                   type="submit"
                   className="add-button"
@@ -1585,7 +1626,7 @@ function Profile() {
                         size={14}
                       />
 
-                      Add Skill
+                      {editingSkillId ? "Save Skill" : "Add Skill"}
                     </>
                   )}
 
@@ -1645,6 +1686,24 @@ function Profile() {
                           </div>
 
                         </div>
+
+                        <button
+                          type="button"
+                          className="delete-button"
+                          aria-label="Edit skill"
+                          onClick={() => {
+                            setEditingSkillId(skillId);
+                            setSkillForm({
+                              skill_name: skill.skill_name || skill.name || "",
+                              proficiency: skill.proficiency || "",
+                              category: skill.category || "",
+                              years_experience: skill.years_experience == null ? "" : String(skill.years_experience),
+                            });
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                        >
+                          <Pencil size={14} />
+                        </button>
 
                         <button
                           type="button"

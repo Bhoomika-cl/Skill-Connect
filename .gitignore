@@ -1,0 +1,18 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+backend/.env
+
+# Project-local environments and generated packages
+backend/venv/
+backend/.venv/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.py[cod]
+
+# Private development uploads
+backend/uploads/
+backend/private_uploads/
+DEMO_ACCOUNTS_AND_DATA.local.md

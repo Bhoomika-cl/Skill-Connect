@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
@@ -21,6 +22,21 @@ import Skills from "./pages/Skills.jsx";
 import Projects from "./pages/Projects.jsx";
 import SkillInsights from "./pages/SkillInsights.jsx";
 import Settings from "./pages/Settings.jsx";
+import EmployeeTasks from "./pages/EmployeeTasks.jsx";
+import EmployeeCertifications from "./pages/EmployeeCertifications.jsx";
+import AdminCertificationWorkspace from "./pages/AdminCertificationWorkspace.jsx";
+import AdminOverview from "./pages/AdminOverview.jsx";
+import AdminLayout from "./components/AdminLayout.jsx";
+import AdminDiscover from "./pages/AdminDiscover.jsx";
+import AdminProjectsTasks from "./pages/AdminProjectsTasks.jsx";
+import AdminAccess from "./pages/AdminAccess.jsx";
+import AdminReports from "./pages/AdminReports.jsx";
+import EmployeeLayout from "./components/EmployeeLayout.jsx";
+
+function RoleLanding() {
+  const { user } = useAuth();
+  return <Navigate to={user?.role === "admin" ? "/admin/dashboard" : "/employee/dashboard"} replace />;
+}
 
 function App() {
   return (
@@ -45,8 +61,10 @@ function App() {
 
           <Route
             path="/login"
-            element={<Login />}
+            element={<Navigate to="/employee/login" replace />}
           />
+          <Route path="/employee/login" element={<Login role="employee" />} />
+          <Route path="/admin/login" element={<Login role="admin" />} />
 
 
           {/* =========================
@@ -57,75 +75,44 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <RoleLanding />
               </ProtectedRoute>
             }
           />
+          <Route element={<ProtectedRoute role="employee"><EmployeeLayout /></ProtectedRoute>}>
+            <Route path="/employee/dashboard" element={<Dashboard />} />
+            <Route path="/employee/my-tasks" element={<EmployeeTasks />} />
+            <Route path="/employee/certifications" element={<EmployeeCertifications />} />
+            <Route path="/employee/profile" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/find-people" element={<FindPeople />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/skills" element={<Skills />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/skill-insights" element={<SkillInsights />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+          <Route element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+            <Route path="/admin/dashboard" element={<AdminOverview />} />
+            <Route path="/admin/discover" element={<AdminDiscover />} />
+            <Route path="/admin/projects-tasks" element={<AdminProjectsTasks />} />
+            <Route path="/admin/certifications" element={<AdminCertificationWorkspace />} />
+            <Route path="/admin/insights" element={<AdminReports />} />
+            <Route path="/admin/access" element={<AdminAccess />} />
+            <Route path="/admin/profile" element={<Profile />} />
+            <Route path="/admin/preferences" element={<Settings />} />
+            <Route path="/admin/employees" element={<Navigate to="/admin/access" replace />} />
+            <Route path="/admin/employee-directory" element={<Navigate to="/admin/discover?type=employees" replace />} />
+            <Route path="/admin/skills" element={<Navigate to="/admin/discover?type=skills" replace />} />
+            <Route path="/admin/matches" element={<Navigate to="/admin/discover?type=matches" replace />} />
+            <Route path="/admin/projects" element={<Navigate to="/admin/projects-tasks?tab=projects" replace />} />
+            <Route path="/admin/tasks" element={<Navigate to="/admin/projects-tasks?tab=tasks" replace />} />
+          </Route>
 
           <Route
-            path="/profile"
+            path="/admin"
             element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/find-people"
-            element={
-              <ProtectedRoute>
-                <FindPeople />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/employees"
-            element={
-              <ProtectedRoute>
-                <Employees />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/skills"
-            element={
-              <ProtectedRoute>
-                <Skills />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* =========================
-              PROJECTS
-             ========================= */}
-
-          <Route
-            path="/projects"
-            element={
-              <ProtectedRoute>
-                <Projects />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/skill-insights"
-            element={
-              <ProtectedRoute>
-                <SkillInsights />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
+              <Navigate to="/admin/dashboard" replace />
             }
           />
 

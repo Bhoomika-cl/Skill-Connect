@@ -8,6 +8,7 @@ import {
   Award,
   BriefcaseBusiness,
   Network,
+  ShieldCheck,
   Settings,
   LogOut,
   ArrowRight,
@@ -1953,6 +1954,16 @@ function Dashboard() {
             </span>
 
           </Link>
+
+          {user?.role === "admin" && (
+            <Link
+              to="/admin"
+              className={`sidebar-link ${isActive("/admin") ? "active" : ""}`}
+            >
+              <ShieldCheck size={20} />
+              <span>Admin Console</span>
+            </Link>
+          )}
 
 
           <Link

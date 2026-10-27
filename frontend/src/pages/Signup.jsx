@@ -9,6 +9,8 @@ import {
   Users,
   Search,
   Network,
+  ShieldCheck,
+  BriefcaseBusiness,
 } from "lucide-react";
 
 import API from "../services/api.js";
@@ -308,6 +310,22 @@ function Signup() {
 
           </div>
 
+          <div className="signup-admin-feature">
+            <div className="signup-admin-feature-heading">
+              <span><ShieldCheck size={16} /></span>
+              <div>
+                <strong>Admin workspace</strong>
+                <small>For organization administrators</small>
+              </div>
+            </div>
+            <div className="signup-admin-feature-list">
+              <span><Users size={14} /> Manage employee access</span>
+              <span><Search size={14} /> Discover and match skills</span>
+              <span><BriefcaseBusiness size={14} /> Review projects and certifications</span>
+            </div>
+            <p>Admin privileges are assigned separately. Employee sign-up does not create an Admin account.</p>
+          </div>
+
         </div>
 
         {/* FOOTER */}
@@ -327,12 +345,17 @@ function Signup() {
 
         <div className="signup-form-container">
 
+          <nav className="signup-role-switch" aria-label="Choose account type">
+            <Link className="active" to="/signup" aria-current="page">Employee sign up</Link>
+            <Link to="/admin/login">Admin sign in</Link>
+          </nav>
+
           {/* FORM HEADER */}
 
           <div className="signup-form-header">
 
             <span className="signup-form-label">
-              CREATE ACCOUNT
+              EMPLOYEE REGISTRATION
             </span>
 
             <h2>
@@ -343,6 +366,11 @@ function Signup() {
               Join SkillConnect and make your expertise
               discoverable.
             </p>
+
+            <div className="signup-admin-notice">
+              <ShieldCheck size={16} />
+              <span>Need Admin access? Use <Link to="/admin/login">Admin sign in</Link> or contact your organization administrator to request it.</span>
+            </div>
 
           </div>
 
@@ -531,8 +559,10 @@ function Signup() {
             Already have an account?
 
             <Link to="/login">
-              Sign In
+              Employee sign in
             </Link>
+            <span className="signup-login-divider">·</span>
+            <Link to="/admin/login">Admin sign in</Link>
 
           </div>
 
